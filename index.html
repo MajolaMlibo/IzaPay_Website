@@ -27,11 +27,16 @@
             box-sizing: border-box;
         }
 
+        html {
+            scroll-behavior: smooth; /* smooth scrolling for anchor links */
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: var(--text);
             background-color: var(--bg-root);
             line-height: 1.6;
+            overflow-x: hidden; /* Prevents horizontal scroll when sections scale up */
         }
 
         /* --- Navigation --- */
@@ -46,6 +51,7 @@
             z-index: 100;
             border-bottom: 1px solid var(--border);
             backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
 
         .logo {
@@ -63,7 +69,7 @@
             color: white;
             width: 36px;
             height: 36px;
-            border-radius: 8px; /* Matches BorderRadius.sm in theme */
+            border-radius: 8px; 
             display: flex;
             align-items: center;
             justify-content: center;
@@ -74,11 +80,29 @@
             color: var(--text-secondary);
             margin-left: 24px;
             font-weight: 600;
-            transition: color 0.2s;
+            transition: color 0.3s ease;
+            position: relative;
         }
 
         .nav-links a:hover {
             color: var(--primary);
+        }
+
+        /* [MODIFIED] Active state for nav links */
+        .nav-links a.active {
+            color: var(--primary);
+        }
+        
+        /* Optional: small dot under active link */
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary);
+            border-radius: 2px;
         }
 
         .btn-download {
@@ -90,6 +114,7 @@
             font-weight: 600;
             transition: transform 0.2s, background-color 0.2s;
             display: inline-block;
+            cursor: pointer; 
         }
 
         .btn-download:hover {
@@ -97,11 +122,28 @@
             transform: translateY(-2px);
         }
 
+        /* --- Section Common Styles for Animation --- */
+        /* [MODIFIED] Added transition to sections for the "pop" effect */
+        section {
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
+            opacity: 0.8; /* Slightly dimmed when not active */
+            transform: scale(0.98); /* Slightly smaller when not active */
+        }
+
+        /* [MODIFIED] The class that makes the section "increase a little" */
+        section.active-section {
+            opacity: 1;
+            transform: scale(1);
+        }
+
         /* --- Hero Section --- */
         .hero {
             text-align: center;
             padding: 100px 20px 60px;
             background: linear-gradient(180deg, #FFF 0%, var(--bg-secondary) 100%);
+            /* Ensure hero looks active by default if JS fails or on load */
+            opacity: 1; 
+            transform: scale(1);
         }
 
         .hero h1 {
@@ -171,7 +213,7 @@
             color: var(--text-secondary);
         }
 
-        /* --- How it Works (Based on Onboarding) --- */
+        /* --- How it Works --- */
         .how-it-works {
             padding: 80px 5%;
             text-align: center;
@@ -222,6 +264,10 @@
             color: #ECEDEE;
             padding: 60px 5%;
             text-align: center;
+            /* Footer doesn't need to scale like sections */
+            transition: none;
+            opacity: 1;
+            transform: none;
         }
 
         footer p {
@@ -243,21 +289,21 @@
 <body>
 
     <nav>
-        <a href="#" class="logo">
+        <a href="#home" class="logo">
             <div class="logo-icon">
                 <i data-feather="shield"></i>
             </div>
             IzaPay
         </a>
         <div class="nav-links">
-            <a href="#features">Features</a>
-            <a href="#how">How it Works</a>
-            <a href="#contact">Contact</a>
+            <a href="#features" class="nav-link">Features</a>
+            <a href="#how" class="nav-link">How it Works</a>
+            <a href="#contact" class="nav-link">Contact</a>
         </div>
         <a href="#" class="btn-download">Get the App</a>
     </nav>
 
-    <section class="hero">
+    <section id="home" class="hero">
         <h1>Payments Without <br><span>Internet</span></h1>
         <p>Send and receive money instantly using just your phone's Wi-Fi.<br>
             No data, no signal, no problem.<br>
@@ -283,7 +329,7 @@
             <div class="card">
                 <div class="card-icon"><i data-feather="zap"></i></div>
                 <h3>Instant Transfer</h3>
-                <p>No bank delays. Money moves directly between devices using high-speed Wi-Fi Direct.</p>
+                <p>No bank delays. Money moves directly between devices using Wi-Fi even with no connection.</p>
             </div>
         </div>
     </section>
@@ -333,6 +379,58 @@
 
     <script>
         feather.replace();
+
+        // Download Button Listener (Previous Logic)
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadButtons = document.querySelectorAll('.btn-download');
+            downloadButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert("Coming Soon!\n\nWe are currently finalizing the IzaPay app. Please check back later for the official launch.");
+                });
+            });
+
+            // [MODIFIED] ScrollSpy Logic for Highlighting and Scaling
+            const sections = document.querySelectorAll("section");
+            const navLinks = document.querySelectorAll(".nav-links a");
+
+            const observerOptions = {
+                root: null,
+                rootMargin: "0px",
+                threshold: 0.5 // Trigger when 50% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        
+                        // 1. Handle Section "Increase" (Scale) Effect
+                        // Remove active class from all sections first
+                        sections.forEach(sec => sec.classList.remove("active-section"));
+                        // Add to current
+                        entry.target.classList.add("active-section");
+
+                        // 2. Handle Navigation Highlighting
+                        const id = entry.target.getAttribute("id");
+                        
+                        // Remove active class from all links
+                        navLinks.forEach(link => {
+                            link.classList.remove("active");
+                        });
+
+                        // Add active class to the link matching the current section ID
+                        const activeLink = document.querySelector(`.nav-links a[href="#${id}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add("active");
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach((section) => {
+                observer.observe(section);
+            });
+        });
     </script>
 </body>
 </html>
