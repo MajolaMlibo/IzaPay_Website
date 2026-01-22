@@ -45,12 +45,18 @@
             align-items: center;
             padding: 20px 5%;
             background: rgba(255, 255, 255, 0.95);
-            position: sticky;
+            position: fixed; /* MODIFIED: Changed from sticky to fixed for consistent scroll behavior */
+            width: 100%; /* MODIFIED: Added width for fixed positioning */
             top: 0;
             z-index: 100;
             border-bottom: 1px solid var(--border);
             backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease; /* MODIFIED: Specific transition for the hide/show effect */
+        }
+
+        /* MODIFIED: New class to hide the navigation */
+        nav.nav-hidden {
+            transform: translateY(-100%);
         }
 
         .logo {
@@ -132,7 +138,7 @@
 
         .hero {
             text-align: center;
-            padding: 100px 20px 60px;
+            padding: 150px 20px 60px; /* MODIFIED: Increased top padding to account for fixed header */
             background: linear-gradient(180deg, #FFF 0%, var(--bg-secondary) 100%);
             opacity: 1; 
             transform: scale(1);
@@ -362,7 +368,7 @@
 </head>
 <body>
 
-    <nav>
+    <nav id="main-nav">
         <a href="#home" class="logo">
             <div class="logo-icon">
                 <i data-feather="shield"></i>
@@ -473,7 +479,6 @@
         feather.replace();
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Updated Alert Message for both Buttons
             const downloadButtons = document.querySelectorAll('.btn-download');
             downloadButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
@@ -482,7 +487,6 @@
                 });
             });
 
-            // Target both Sections AND Footer for the highlighing logic
             const sections = document.querySelectorAll("section, footer");
             const navLinks = document.querySelectorAll(".nav-links a");
 
@@ -495,15 +499,12 @@
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        // Handle visual fade/scale effect
                         sections.forEach(sec => sec.classList.remove("active-section"));
                         entry.target.classList.add("active-section");
 
-                        // Update Navigation Active state
                         const id = entry.target.getAttribute("id");
                         navLinks.forEach(link => {
                             link.classList.remove("active");
-                            // Check if the link href matches the section id
                             if (link.getAttribute("href") === `#${id}`) {
                                 link.classList.add("active");
                             }
@@ -516,7 +517,6 @@
                 observer.observe(section);
             });
 
-            // Phone screen carousel logic
             const screen = document.getElementById('phone-screen');
             let scrollAmount = 0;
             
@@ -532,8 +532,20 @@
                     behavior: 'smooth'
                 });
             }, 4000);
+
+            /* MODIFIED: Added scroll tracking logic to hide/show header */
+            let lastScrollY = window.scrollY;
+            const navElement = document.getElementById('main-nav');
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > lastScrollY && window.scrollY > 100) {
+                    navElement.classList.add('nav-hidden');
+                } else {
+                    navElement.classList.remove('nav-hidden');
+                }
+                lastScrollY = window.scrollY;
+            });
         });
     </script>
 
 </body></html>
-
